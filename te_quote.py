@@ -58,11 +58,11 @@ def generate_quote(env_vars):
 
 def create_image_and_video(music):
     """Create image and video based on the generated quote."""
-    with open("./quote_data.json", "r", encoding="utf-8") as quote_data:
-        image = TextImageGenerator('./bg.png', './font_te.ttf', './output_image.png')
+    with open("quote_data.json", "r", encoding="utf-8") as quote_data:
+        image = TextImageGenerator('bg.png', 'font_te.ttf', 'output_image.png')
         image.text_on_background(json.load(quote_data)['quote'])
 
-        video = VideoCreator('./output_image.png', f'./{music}.mp3', output_video_path='./output_video.mp4', duration=55)
+        video = VideoCreator('output_image.png', f'{music}.mp3', output_video_path='output_video.mp4', duration=55)
         print((quote_data))
         video.create_video_with_music()
 
@@ -75,14 +75,14 @@ def upload_to_s3():
         os.getenv('S3_ZONE'),
         os.getenv('S3_BUCKET')
     )
-    url = s3.upload_file_to_s3('./output_video.mp4', 'output_video.mp4')
+    url = s3.upload_file_to_s3('output_video.mp4', 'output_video_te.mp4')
     return url
 
 
 def upload_to_platforms(quote_data):
     """Upload video to YouTube, Facebook, Instagram, and Threads."""
     yt = YouTubeUploader().initialize_upload(
-        './output_video.mp4',
+        'output_video.mp4',
         quote_data['quote'],
         quote_data['description'],
         quote_data['tags'],
@@ -90,10 +90,10 @@ def upload_to_platforms(quote_data):
     )
 
     fb = FacebookUploader(quote_data, os.getenv('FB_VERSION'), os.getenv('FB_PAGE_ID'), os.getenv('FB_PAGE_TOKEN'))
-    fb.initialize_upload_session('./output_video.mp4')
+    fb.initialize_upload_session('output_video.mp4')
 
     inst = InstagramUploader(quote_data, os.getenv('FB_VERSION'), os.getenv('INSTA_PAGE_ID'), os.getenv('FB_PAGE_TOKEN'))
-    inst.post_reel(video_url='./output_video.mp4')
+    inst.post_reel(video_url='output_video.mp4')
 
     th = ThreadsUploader(
         quote_data,
@@ -112,7 +112,7 @@ def main():
         generate_quote(env_vars)
         create_image_and_video(music)
         url = upload_to_s3()
-        # with open("./quote_data.json", "r", encoding="utf-8") as quote_data_file:
+        # with open("quote_data.json", "r", encoding="utf-8") as quote_data_file:
         #     quote_data = json.load(quote_data_file)
         #     upload_to_platforms(quote_data)
 
