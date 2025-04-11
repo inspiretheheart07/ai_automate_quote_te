@@ -8,4 +8,3 @@ oauth2client
 facebook_business
 boto3
 python-dotenv
-git+https://$GH_TOKEN@github.com/simplycodesmart/automate_quote_ai.git
