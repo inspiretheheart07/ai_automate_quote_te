@@ -7,6 +7,26 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      GEMENI_KEY: ${{ secrets.GEMENI_KEY }}
+      GEMENI_MODEL: ${{ secrets.GEMENI_MODEL }}
+      ADJECTIVES: ${{ secrets.ADJECTIVES }}
+      THEMES: ${{ secrets.THEMES }}
+      LANGUAGE: ${{ secrets.LANGUAGE }}
+      S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
+      S3_SECRETE_KEY: ${{ secrets.S3_SECRETE_KEY }}
+      S3_ZONE: ${{ secrets.S3_ZONE }}
+      S3_BUCKET: ${{ secrets.S3_BUCKET }}
+      FB_VERSION: ${{ secrets.FB_VERSION }}
+      FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+      FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
+      INSTA_PAGE_ID: ${{ secrets.INSTA_PAGE_ID }}
+      THREADS_VERSION: ${{ secrets.THREADS_VERSION }}
+      S3_URL: ${{ secrets.S3_URL }}
+      THREADS_PAGE_ID: ${{ secrets.THREADS_PAGE_ID }}
+      THREADS_PAGE_TOKEN: ${{ secrets.THREADS_PAGE_TOKEN }}
+      YT_JSON: ${{ secrets.YT_JSON }}
+      DRIVE_LINK: ${{ secrets.DRIVE_LINK }}
 
     steps:
       - name: Checkout code
