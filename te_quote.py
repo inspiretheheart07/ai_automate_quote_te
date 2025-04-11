@@ -42,11 +42,11 @@ def load_environment_variables():
     return env_vars
 
 
-def download_files():
+def download_files(music):
     """Download necessary files from Google Drive."""
     download = DriveManager(json.loads(os.getenv('YT_JSON')), [os.getenv('DRIVE_LINK')])
     download.build_drive_service()
-    download.download_files([f"{random.randint(101, 113)}.mp3", 'bg.png', 'font_te.ttf', 'output_image.png'])
+    download.download_files([f"{music}.mp3", 'bg.png', 'font_te.ttf', 'output_image.png'])
 
 
 def generate_quote(env_vars):
@@ -56,13 +56,13 @@ def generate_quote(env_vars):
     return quote
 
 
-def create_image_and_video():
+def create_image_and_video(music):
     """Create image and video based on the generated quote."""
     with open("./quote_data.json", "r", encoding="utf-8") as quote_data:
         image = TextImageGenerator('./bg.png', './font_te.ttf', './output_image.png')
         image.text_on_background(json.load(quote_data)['quote'])
 
-        video = VideoCreator('./output_image.png', './1.mp3', output_video_path='./output_video.mp4', duration=55)
+        video = VideoCreator('./output_image.png', f'./{music}.mp3', output_video_path='./output_video.mp4', duration=55)
         print((quote_data))
         video.create_video_with_music()
 
@@ -106,10 +106,11 @@ def upload_to_platforms(quote_data):
 
 
 def main():
+        music = random.randint(101, 113)
         env_vars = load_environment_variables()
-        download_files()
+        download_files(music)
         generate_quote(env_vars)
-        create_image_and_video()
+        create_image_and_video(music)
         url = upload_to_s3()
         # with open("./quote_data.json", "r", encoding="utf-8") as quote_data_file:
         #     quote_data = json.load(quote_data_file)
