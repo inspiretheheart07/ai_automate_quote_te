@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
 
+  schedule:
+    - cron: "30 3,9,11,15 * * *"
+    - cron: "30 2,12 * * *"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,6 +31,9 @@ jobs:
       THREADS_PAGE_TOKEN: ${{ secrets.THREADS_PAGE_TOKEN }}
       YT_JSON: ${{ secrets.YT_JSON }}
       DRIVE_LINK: ${{ secrets.DRIVE_LINK }}
+      JSON_CLIENT_YT: ${{ secrets.JSON_CLIENT_YT }}
+      JSON_OAUTH_YT: ${{ secrets.JSON_OAUTH_YT }}
+
 
     steps:
       - name: Checkout code
@@ -52,6 +59,60 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: Format and save client_secrets.json
+        run: |
+          python -c "
+          import json
+          import os
+      
+          # Load the client secrets from the GitHub secret (stored in JSON_OAUTH)
+          client_secrets = os.getenv('JSON_OAUTH')
+          
+          # Debugging: Check if client_secrets is set
+          if client_secrets is None:
+              print('Error: JSON_OAUTH environment variable is not set.')
+              exit(1)
+      
+          
+      
+          # Parse the secret into a JSON object
+          client_secrets_dict = json.loads(client_secrets)
+      
+          # Re-encode the JSON object with double quotes
+          with open('client_secrets.json', 'w') as f:
+              json.dump(client_secrets_dict, f, indent=2)
+      
+          print('client_secrets.json successfully written')"
+        env:
+          JSON_OAUTH: ${{ secrets.JSON_CLIENT_YT }}  # Pass the secret here
+
+
+      - name: Format and save oauth.json
+        run: |
+            python -c "
+            import json
+            import os
+    
+            # Load the client secrets from the GitHub secret (stored in JSON_OAUTH_MAIN)
+            client_secrets = os.getenv('JSON_OAUTH_MAIN')
+            
+            # Debugging: Check if client_secrets is set
+            
+            
+            if not client_secrets:
+                exit('Error: JSON_OAUTH_MAIN is not set.')
+    
+            # Parse the secret into a JSON object
+            client_secrets_dict = json.loads(client_secrets)
+    
+            # Re-encode the JSON object with double quotes
+            with open('oauth.json', 'w') as f:
+                json.dump(client_secrets_dict, f, indent=2)
+    
+            print('oauth.json successfully written')"
+        env:
+          JSON_OAUTH_MAIN: ${{ secrets.JSON_OAUTH_YT }}  # Pass the secret here
 
       - name: Run Process
         run: python te_quote.py

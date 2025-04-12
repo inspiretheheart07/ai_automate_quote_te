@@ -61,7 +61,6 @@ def create_image_and_video(music):
     with open("quote_data.json", "r", encoding="utf-8") as quote_data:
         image = TextImageGenerator('bg.png', 'font_te.ttf', 'output_image.png')
         image.text_on_background(json.load(quote_data)['quote'])
-
         video = VideoCreator('output_image.png', f'{music}.mp3', output_video_path='output_video.mp4', duration=55)
         print((quote_data))
         video.create_video_with_music()
@@ -81,12 +80,13 @@ def upload_to_s3():
 
 def upload_to_platforms(quote_data):
     """Upload video to YouTube, Facebook, Instagram, and Threads."""
+    print(quote_data)
     yt = YouTubeUploader().initialize_upload(
         'output_video.mp4',
-        quote_data['quote'],
+        quote_data['title'],
         quote_data['description'],
         quote_data['tags'],
-        22, True
+        22, False
     )
 
     fb = FacebookUploader(quote_data, os.getenv('FB_VERSION'), os.getenv('FB_PAGE_ID'), os.getenv('FB_PAGE_TOKEN'))
@@ -112,9 +112,9 @@ def main():
         generate_quote(env_vars)
         create_image_and_video(music)
         url = upload_to_s3()
-        # with open("quote_data.json", "r", encoding="utf-8") as quote_data_file:
-        #     quote_data = json.load(quote_data_file)
-        #     upload_to_platforms(quote_data)
+        with open("quote_data.json", "r", encoding="utf-8") as quote_data_file:
+            quote_data = json.load(quote_data_file)
+            upload_to_platforms(quote_data)
 
 if __name__ == "__main__":
     main()
