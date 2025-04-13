@@ -30,6 +30,7 @@ def load_environment_variables():
         "FB_VERSION": os.getenv('FB_VERSION'),
         "FB_PAGE_ID": os.getenv('FB_PAGE_ID'),
         "FB_PAGE_TOKEN": os.getenv('FB_PAGE_TOKEN'),
+        "INSTA_PAGE_TOKEN":os.getenv('INSTA_PAGE_TOKEN'),
         "INSTA_PAGE_ID": os.getenv('INSTA_PAGE_ID'),
         "THREADS_VERSION": os.getenv('THREADS_VERSION'),
         "S3_URL": os.getenv('S3_URL'),
@@ -80,38 +81,38 @@ def upload_to_s3():
 
 def upload_to_platforms(quote_data):
     """Upload video to YouTube, Facebook, Instagram, and Threads."""
-    print(quote_data)
-    yt = YouTubeUploader().initialize_upload(
-        'output_video.mp4',
-        quote_data['title'],
-        quote_data['description'],
-        quote_data['tags'],
-        22, False
-    )
+    # print(quote_data)
+    # yt = YouTubeUploader().initialize_upload(
+    #     'output_video.mp4',
+    #     quote_data['title'],
+    #     quote_data['description'],
+    #     quote_data['tags'],
+    #     22, False
+    # )
 
-    fb = FacebookUploader(quote_data, os.getenv('FB_VERSION'), os.getenv('FB_PAGE_ID'), os.getenv('FB_PAGE_TOKEN'))
-    fb.initialize_upload_session('output_video.mp4')
+    # fb = FacebookUploader(quote_data, os.getenv('FB_VERSION'), os.getenv('FB_PAGE_ID'), os.getenv('FB_PAGE_TOKEN'))
+    # fb.initialize_upload_session('output_video.mp4')
 
-    inst = InstagramUploader(quote_data, os.getenv('FB_VERSION'), os.getenv('INSTA_PAGE_ID'), os.getenv('FB_PAGE_TOKEN'))
+    inst = InstagramUploader(quote_data, os.getenv('FB_VERSION'), os.getenv('INSTA_PAGE_ID'), os.getenv('INSTA_PAGE_TOKEN'))
     inst.post_reel(video_url='output_video.mp4')
-
-    th = ThreadsUploader(
-        quote_data,
-        os.getenv('THREADS_VERSION'),
-        os.getenv('S3_URL'),
-        os.getenv('THREADS_PAGE_ID'),
-        os.getenv('THREADS_PAGE_TOKEN')
-    )
-    th.threads_post()
+    #
+    # th = ThreadsUploader(
+    #     quote_data,
+    #     os.getenv('THREADS_VERSION'),
+    #     os.getenv('S3_URL'),
+    #     os.getenv('THREADS_PAGE_ID'),
+    #     os.getenv('THREADS_PAGE_TOKEN')
+    # )
+    # th.threads_post()
 
 
 def main():
-        music = random.randint(101, 113)
-        env_vars = load_environment_variables()
-        download_files(music)
-        generate_quote(env_vars)
-        create_image_and_video(music)
-        url = upload_to_s3()
+        # music = random.randint(101, 113)
+        # env_vars = load_environment_variables()
+        # download_files(music)
+        # generate_quote(env_vars)
+        # create_image_and_video(music)
+        # url = upload_to_s3()
         with open("quote_data.json", "r", encoding="utf-8") as quote_data_file:
             quote_data = json.load(quote_data_file)
             upload_to_platforms(quote_data)
