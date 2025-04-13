@@ -30,6 +30,7 @@ jobs:
       DRIVE_LINK: ${{ secrets.DRIVE_LINK }}
       JSON_CLIENT_YT: ${{ secrets.JSON_CLIENT_YT }}
       JSON_OAUTH_YT: ${{ secrets.JSON_OAUTH_YT }}
+      INSTA_PAGE_TOKEN: ${{ secrets.INSTA_PAGE_TOKEN }}
 
 
     steps:
