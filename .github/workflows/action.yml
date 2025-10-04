@@ -1,6 +1,7 @@
 name: Python CI
 
 on:
+  push:
   schedule:
     - cron: "30 1,3,5,7,9,11,13,15 * * *"
 
@@ -47,17 +48,65 @@ jobs:
             sudo apt update
             sudo apt install --fix-missing
 
+      # - name: Install FFmpeg
+      #   run: sudo apt-get install -y ffmpeg
+
       - name: Install FFmpeg
-        run: sudo apt-get install -y ffmpeg
+        uses: FedericoCarboni/setup-ffmpeg@v3
+        id: setup-ffmpeg
+        with:
+        # Optional: Specify a version. Omit this line to use the latest.
+         ffmpeg-version: "6.1.0"
 
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
 
-      - name: Install private repo manually using GitHub token
+      - name: Install latest wheel from private repo
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          pip install git+https://$GH_TOKEN@github.com/simplycodesmart/automate_quote_ai.git
+          sudo apt-get update && sudo apt-get install -y jq
+          # 1. Use the GitHub Repository Contents API to get a list of files in the 'dist' folder.
+          # The API returns a JSON array of objects for each file.
+          API_URL="https://api.github.com/repos/simplycodesmart/automate_quote_ai/contents/dist"
+          RESPONSE=$(curl -s -H "Authorization: token $GH_TOKEN" "$API_URL")
+
+          echo "$RESPONSE"
+
+
+          if ! echo "$RESPONSE" | jq 'type' | grep -q '"array"'; then
+             echo "Error: GitHub API did not return a JSON array. Check token and repo access."
+             exit 1
+          fi
+        
+          # 2. Extract the download URL for the latest .whl file.
+          # We sort the filenames to get the latest version and take the first one.
+          WHEEL_URL=$(echo "$RESPONSE" | \
+            jq -r '.[] | select(.name | endswith(".whl")) | .download_url' | \
+            sort -r | head -n 1)
+        
+          # 3. Handle the case where no wheel is found.
+          if [ -z "$WHEEL_URL" ]; then
+            echo "Error: No .whl file found in dist/."
+            exit 1
+          fi
+        
+          echo "Downloading latest wheel from $WHEEL_URL"
+        
+          # 4. Use pip to install directly from the fetched URL.
+          # pip can handle the authentication and download process automatically.
+          pip install "$WHEEL_URL"
+
+
+      - name: Verify installation
+        run: |
+          python -c "import ai_automate_quote; print('Wheel installed successfully!')"
+
+      # - name: Install private repo manually using GitHub token
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      #   run: |
+      #     pip install git+https://$GH_TOKEN@github.com/simplycodesmart/automate_quote_ai.git
 
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -116,5 +165,30 @@ jobs:
         env:
           JSON_OAUTH_MAIN: ${{ secrets.JSON_OAUTH_YT }}  # Pass the secret here
 
+      
+      - name: Copy bg.png and font.ttf to working directory
+        run: |
+          cp assets/bg.png .
+          cp assets/font_te.ttf .
+          cp assets/output_image.png .
+      
+      - name: Generate random number between 1 and 23
+        id: random_number
+        run: |
+          RANDOM_NUM=$((1 + RANDOM % 23))
+          echo "Random number is $RANDOM_NUM"
+          echo "number=$RANDOM_NUM" >> $GITHUB_OUTPUT
+
+      - name: Copy the randomly picked MP3
+        run: |
+          FILE="assets/music/${{ steps.random_number.outputs.number }}.mp3"
+          echo "Copying $FILE to current directory as random.mp3"
+          cp "$FILE" ./${{ steps.random_number.outputs.number }}.mp3
+
+      - name: List files for verification
+        run: ls -l
+
       - name: Run Process
-        run: python te_quote.py
+        run: |
+          echo "Running te_quote.py with random number ${{ steps.random_number.outputs.number }}"
+          python te_quote.py "${{ steps.random_number.outputs.number }}"
