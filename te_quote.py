@@ -1,7 +1,10 @@
+import glob
 import json
 import os
-import random
 import sys
+
+from ai_automate_quote.auth.auth_manager import PinterestAuthenticator
+from ai_automate_quote.upload.pinterest import PinterestUploader
 from dotenv import load_dotenv
 from ai_automate_quote.quotes.generator import QuoteGenerator
 from ai_automate_quote.images.creator import TextImageGenerator
@@ -12,6 +15,7 @@ from ai_automate_quote.upload.youtube import YouTubeUploader
 from ai_automate_quote.upload.facebook import FacebookUploader
 from ai_automate_quote.upload.instagram import InstagramUploader
 from ai_automate_quote.upload.threads_upload import ThreadsUploader
+from ai_automate_quote.upload.pinterest import PinterestBoardManager
 
 random_number = int(sys.argv[1])
 
@@ -41,7 +45,14 @@ def load_environment_variables():
         "THREADS_PAGE_ID": os.getenv('THREADS_PAGE_ID'),
         "THREADS_PAGE_TOKEN": os.getenv('THREADS_PAGE_TOKEN'),
         "YT_JSON": os.getenv('YT_JSON'),
-        "DRIVE_LINK": os.getenv('DRIVE_LINK')
+        "DRIVE_LINK": os.getenv('DRIVE_LINK'),
+        "PINTEREST_CLIENT_ID": os.getenv('PINTEREST_CLIENT_ID'),
+        "PINTEREST_CLIENT_SECRET": os.getenv('PINTEREST_CLIENT_SECRET'),
+        "PINTEREST_ACCESS_TOKEN": os.getenv('PINTEREST_ACCESS_TOKEN'),
+        "PINTEREST_REFRESH_TOKEN": os.getenv('PINTEREST_REFRESH_TOKEN'),
+        "PINTEREST_API_URL": os.getenv('PINTEREST_API_URL'),
+        "PINTEREST_BOARD_ID": os.getenv('PINTEREST_BOARD_ID'),
+        "PINTEREST_STATIC_DOMINANT_COLOR": os.getenv('PINTEREST_STATIC_DOMINANT_COLOR'),
     }
 
     return env_vars
@@ -107,6 +118,44 @@ def upload_to_platforms(quote_data):
     #     os.getenv('THREADS_PAGE_TOKEN')
     # )
     # th.threads_post()
+    pin_upload(quote_data,yt)
+    
+def pin_upload(quote_data,link):
+    # Get access token
+    print("🔐 Getting access token...")
+    auth = PinterestAuthenticator()
+    access_token = auth.get_access_token()
+    board_id = os.getenv("PINTEREST_BOARD_ID")
+    upload_url =  os.getenv("PINTEREST_API_URL") + 'pins'
+    if not board_id:
+        print("No Board ID provided in environment variable. Please select one Boards Id from below : ")
+        pn = PinterestBoardManager(access_token)
+        boards = pn.list_boards()
+        print(boards)
+        if not board_id:
+            raise Exception("❌ No board selected. Aborting.")
+
+    # Prepare uploader
+    uploader = PinterestUploader(os.getenv("PINTEREST_ACCESS_TOKEN"), board_id,upload_url)
+
+    # Find images
+    image_paths = glob.glob("./output_image.png")
+    if not image_paths:
+        print("⚠️ No images found in ./assets/images/")
+        return
+
+    # Upload each image
+    for img_path in image_paths:
+        title = os.path.basename(img_path).split(".")[0].replace("_", " ").title()
+        description = f"Auto-uploaded pin: {title}"
+        video_url = f"https://www.youtube.com/watch?v={link}"
+        try:
+            res = uploader.create_pin_from_local(img_path,  quote_data['title'], quote_data['description'],os.getenv('PINTEREST_STATIC_DOMINANT_COLOR'),video_url)
+            print(f"✅ Uploaded: {img_path} → Pin ID: {res.get('id', 'N/A')}")
+        except Exception as e:
+            print(f"❌ Error uploading {img_path}: {e}")
+
+    print("🎉 All uploads completed!")
 
 
 def main():
@@ -122,3 +171,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    #YouTubeUploader().generate_auth_token()
