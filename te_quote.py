@@ -46,6 +46,7 @@ def load_environment_variables():
         "THREADS_PAGE_TOKEN": os.getenv('THREADS_PAGE_TOKEN'),
         "YT_JSON": os.getenv('YT_JSON'),
         "DRIVE_LINK": os.getenv('DRIVE_LINK'),
+        "HF_TOKEN": os.getenv('HF_TOKEN'),
         "PINTEREST_CLIENT_ID": os.getenv('PINTEREST_CLIENT_ID'),
         "PINTEREST_CLIENT_SECRET": os.getenv('PINTEREST_CLIENT_SECRET'),
         "PINTEREST_ACCESS_TOKEN": os.getenv('PINTEREST_ACCESS_TOKEN'),

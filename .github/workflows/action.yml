@@ -31,6 +31,7 @@ jobs:
       JSON_CLIENT_YT: ${{ secrets.JSON_CLIENT_YT }}
       JSON_OAUTH_YT: ${{ secrets.JSON_OAUTH_YT }}
       INSTA_PAGE_TOKEN: ${{ secrets.INSTA_PAGE_TOKEN }}
+      HF_TOKEN: ${{secrets.HF_TOKEN }}
       PINTEREST_CLIENT_ID: ${{ secrets.PINTEREST_CLIENT_ID }}
       PINTEREST_CLIENT_SECRET: ${{ secrets.PINTEREST_CLIENT_SECRET }}
       PINTEREST_ACCESS_TOKEN: ${{ secrets.PINTEREST_ACCESS_TOKEN }}
