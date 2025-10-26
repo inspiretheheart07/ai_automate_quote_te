@@ -5,6 +5,7 @@ import sys
 
 from ai_automate_quote.auth.auth_manager import PinterestAuthenticator
 from ai_automate_quote.upload.pinterest import PinterestUploader
+from ai_automate_quote.utils.quote_text_to_auido_mix_video import TextToAudioMixVideo
 from dotenv import load_dotenv
 from ai_automate_quote.quotes.generator import QuoteGenerator
 from ai_automate_quote.images.creator import TextImageGenerator
@@ -14,7 +15,6 @@ from ai_automate_quote.amazon.s3Manager import AmazonS3Manager
 from ai_automate_quote.upload.youtube import YouTubeUploader
 from ai_automate_quote.upload.facebook import FacebookUploader
 from ai_automate_quote.upload.instagram import InstagramUploader
-from ai_automate_quote.upload.threads_upload import ThreadsUploader
 from ai_automate_quote.upload.pinterest import PinterestBoardManager
 
 random_number = int(sys.argv[1])
@@ -75,11 +75,16 @@ def generate_quote(env_vars):
 def create_image_and_video(music):
     """Create image and video based on the generated quote."""
     with open("quote_data.json", "r", encoding="utf-8") as quote_data:
+        data = json.load(quote_data)  # ✅ load once
+        quote_text = data['quote']
         image = TextImageGenerator('bg.png', 'font_te.ttf', 'output_image.png')
-        image.text_on_background(json.load(quote_data)['quote'])
-        video = VideoCreator('output_image.png', f'{music}.mp3', output_video_path='output_video.mp4', duration=55)
+        image.text_on_background(quote_text)
+        video = VideoCreator('output_image.png', f'{music}.mp3', output_video_path='temp_output_video.mp4', duration=55)
         print((quote_data))
         video.create_video_with_music()
+        tts_mixer = TextToAudioMixVideo(text=quote_text, music_path=f'{music}.mp3')
+        tts_mixer.process()
+
 
 
 def upload_to_s3():
@@ -171,4 +176,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    #YouTubeUploader().generate_auth_token()
+    # YouTubeUploader().generate_auth_token()
