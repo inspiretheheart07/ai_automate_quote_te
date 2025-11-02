@@ -124,7 +124,7 @@ def upload_to_platforms(quote_data):
     #     os.getenv('THREADS_PAGE_TOKEN')
     # )
     # th.threads_post()
-    pin_upload(quote_data,yt)
+    # pin_upload(quote_data,yt)
     
 def pin_upload(quote_data,link):
     # Get access token
