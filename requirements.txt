@@ -1,10 +1,15 @@
+google-generativeai
 google-auth==2.17.0
 google-auth-oauthlib==0.5.2
 google-auth-httplib2==0.1.0
 google-api-python-client==2.77.0
 moviepy==2.1.2
-Pillow===9.2.0
+Pillow
 oauth2client
 facebook_business
 boto3
 python-dotenv
+huggingface_hub
+google-api-python-client
+uharfbuzz
+google-genai
