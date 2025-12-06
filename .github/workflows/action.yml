@@ -3,7 +3,7 @@ name: Python CI
 on:
   push:
   schedule:
-    - cron: "30 1,3,5,7,9,11,13,15 * * *"
+    - cron: "0 2,5,10,13 * * *"
 
 jobs:
   build:
