@@ -1,76 +1,117 @@
-name: Python CI
+name: Vionix Pipeline
 
 on:
   push:
   schedule:
     - cron: "0 2,5,10,13 * * *"
 
+concurrency:
+  group: vionix-pipeline
+  cancel-in-progress: true
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+  GEMENI_KEY: ${{ secrets.GEMENI_KEY }}
+  GEMENI_MODEL: ${{ secrets.GEMENI_MODEL }}
+  ADJECTIVES: ${{ secrets.ADJECTIVES }}
+  THEMES: ${{ secrets.THEMES }}
+  LANGUAGE: ${{ secrets.LANGUAGE }}
+
+  S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
+  S3_SECRETE_KEY: ${{ secrets.S3_SECRETE_KEY }}
+  S3_ZONE: ${{ secrets.S3_ZONE }}
+  S3_BUCKET: ${{ secrets.S3_BUCKET }}
+  S3_URL: ${{ secrets.S3_URL }}
+
+  FB_VERSION: ${{ secrets.FB_VERSION }}
+  FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+  FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
+
+  INSTA_PAGE_ID: ${{ secrets.INSTA_PAGE_ID }}
+  INSTA_PAGE_TOKEN: ${{ secrets.INSTA_PAGE_TOKEN }}
+
+  THREADS_VERSION: ${{ secrets.THREADS_VERSION }}
+  THREADS_PAGE_ID: ${{ secrets.THREADS_PAGE_ID }}
+  THREADS_PAGE_TOKEN: ${{ secrets.THREADS_PAGE_TOKEN }}
+
+  YT_JSON: ${{ secrets.YT_JSON }}
+  JSON_CLIENT_YT: ${{ secrets.JSON_CLIENT_YT }}
+  JSON_OAUTH_YT: ${{ secrets.JSON_OAUTH_YT }}
+
+  HF_TOKEN: ${{ secrets.HF_TOKEN }}
+
+  PINTEREST_CLIENT_ID: ${{ secrets.PINTEREST_CLIENT_ID }}
+  PINTEREST_CLIENT_SECRET: ${{ secrets.PINTEREST_CLIENT_SECRET }}
+  PINTEREST_ACCESS_TOKEN: ${{ secrets.PINTEREST_ACCESS_TOKEN }}
+  PINTEREST_BOARD_ID: ${{ secrets.PINTEREST_BOARD_ID }}
+  PINTEREST_REFRESH_TOKEN: ${{ secrets.PINTEREST_REFRESH_TOKEN }}
+  PINTEREST_API_URL: ${{ secrets.PINTEREST_API_URL }}
+  PINTEREST_STATIC_DOMINANT_COLOR: ${{ secrets.PINTEREST_STATIC_DOMINANT_COLOR }}
+
+  VIONIX_GIST_ID: ${{ secrets.VIONIX_GIST_ID }}
+
 jobs:
-  build:
+
+# -------------------------------------------------
+# 1️⃣ SETUP
+# -------------------------------------------------
+  setup:
+    name: 🧱 Setup Environment
     runs-on: ubuntu-latest
-    env:
-      GEMENI_KEY: ${{ secrets.GEMENI_KEY }}
-      GEMENI_MODEL: ${{ secrets.GEMENI_MODEL }}
-      ADJECTIVES: ${{ secrets.ADJECTIVES }}
-      THEMES: ${{ secrets.THEMES }}
-      LANGUAGE: ${{ secrets.LANGUAGE }}
-      S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
-      S3_SECRETE_KEY: ${{ secrets.S3_SECRETE_KEY }}
-      S3_ZONE: ${{ secrets.S3_ZONE }}
-      S3_BUCKET: ${{ secrets.S3_BUCKET }}
-      FB_VERSION: ${{ secrets.FB_VERSION }}
-      FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
-      FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
-      INSTA_PAGE_ID: ${{ secrets.INSTA_PAGE_ID }}
-      THREADS_VERSION: ${{ secrets.THREADS_VERSION }}
-      S3_URL: ${{ secrets.S3_URL }}
-      THREADS_PAGE_ID: ${{ secrets.THREADS_PAGE_ID }}
-      THREADS_PAGE_TOKEN: ${{ secrets.THREADS_PAGE_TOKEN }}
-      YT_JSON: ${{ secrets.YT_JSON }}
-      DRIVE_LINK: ${{ secrets.DRIVE_LINK }}
-      JSON_CLIENT_YT: ${{ secrets.JSON_CLIENT_YT }}
-      JSON_OAUTH_YT: ${{ secrets.JSON_OAUTH_YT }}
-      INSTA_PAGE_TOKEN: ${{ secrets.INSTA_PAGE_TOKEN }}
-      HF_TOKEN: ${{secrets.HF_TOKEN }}
-      PINTEREST_CLIENT_ID: ${{ secrets.PINTEREST_CLIENT_ID }}
-      PINTEREST_CLIENT_SECRET: ${{ secrets.PINTEREST_CLIENT_SECRET }}
-      PINTEREST_ACCESS_TOKEN: ${{ secrets.PINTEREST_ACCESS_TOKEN }}
-      PINTEREST_BOARD_ID: ${{ secrets.PINTEREST_BOARD_ID }}
-      PINTEREST_REFRESH_TOKEN: ${{ secrets.PINTEREST_REFRESH_TOKEN }}
-      PINTEREST_API_URL: ${{ secrets.PINTEREST_API_URL }}
-      PINTEREST_STATIC_DOMINANT_COLOR: ${{ secrets.PINTEREST_STATIC_DOMINANT_COLOR }}
-
-
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-
+      - uses: actions/checkout@v6
         with:
-          python-version: '3.11.0'
+          fetch-depth: 1
 
-      - name: Set up apt
-        run: |
-            sudo apt update
-            sudo apt install --fix-missing
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
 
-      # - name: Install FFmpeg
-      #   run: sudo apt-get install -y ffmpeg
+      - name: Prepare pip cache directory
+        run: mkdir -p ~/.cache/pip
+
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Install FFmpeg
         uses: FedericoCarboni/setup-ffmpeg@v3
-        id: setup-ffmpeg
         with:
-        # Optional: Specify a version. Omit this line to use the latest.
-         ffmpeg-version: "6.1.0"
+          ffmpeg-version: "6.1.0"
+
+# -------------------------------------------------
+# 2️⃣ INSTALL
+# -------------------------------------------------
+  install:
+    name: 📦 Install Dependencies
+    runs-on: ubuntu-latest
+    needs: setup
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Restore pip cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
 
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
 
-      - name: Install wheel from private repo release tag
+      - name: Install private Vionix wheel
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           RELEASE_TAG: ${{ secrets.RELEASE_TAG }}
@@ -79,116 +120,110 @@ jobs:
 
           OWNER="simplycodesmart"
           REPO="Vionix"
-
-          # Fetch release metadata
           API_URL="https://api.github.com/repos/$OWNER/$REPO/releases/tags/$RELEASE_TAG"
-          RESPONSE=$(curl -s -H "Authorization: token $GH_TOKEN" "$API_URL")
 
-          # Get the actual wheel asset name
+          RESPONSE=$(curl -s -H "Authorization: token $GH_TOKEN" "$API_URL")
           WHEEL_NAME=$(echo "$RESPONSE" | jq -r '.assets[] | select(.name | endswith(".whl")) | .name')
 
           if [ -z "$WHEEL_NAME" ]; then
-            echo "❌ No wheel asset found for release tag: $RELEASE_TAG"
+            echo "❌ No wheel found for tag $RELEASE_TAG"
             exit 1
           fi
 
-          echo "Found wheel: $WHEEL_NAME"
-
-          # Get the API download URL (NOT browser URL!)
           WHEEL_URL=$(echo "$RESPONSE" | jq -r '.assets[] | select(.name == "'$WHEEL_NAME'") | .url')
 
-          echo "Downloading via API: $WHEEL_URL"
-
-          # Download correctly
           curl -L \
             -H "Authorization: token $GH_TOKEN" \
             -H "Accept: application/octet-stream" \
             "$WHEEL_URL" \
             -o "$WHEEL_NAME"
 
-          echo "Installing: $WHEEL_NAME"
           pip install "$WHEEL_NAME"
-      - name: Install dependencies
-        run: pip install -r requirements.txt
 
-      - name: Format and save client_secrets.json
-        run: |
-          python -c "
-          import json
-          import os
-      
-          # Load the client secrets from the GitHub secret (stored in JSON_OAUTH)
-          client_secrets = os.getenv('JSON_OAUTH')
-          
-          # Debugging: Check if client_secrets is set
-          if client_secrets is None:
-              print('Error: JSON_OAUTH environment variable is not set.')
-              exit(1)
-      
-          
-      
-          # Parse the secret into a JSON object
-          client_secrets_dict = json.loads(client_secrets)
-      
-          # Re-encode the JSON object with double quotes
-          with open('client_secrets.json', 'w') as f:
-              json.dump(client_secrets_dict, f, indent=2)
-      
-          print('client_secrets.json successfully written')"
-        env:
-          JSON_OAUTH: ${{ secrets.JSON_CLIENT_YT }}  # Pass the secret here
+      - name: Cache private wheel
+        uses: actions/cache@v5
+        with:
+          path: ./*.whl
+          key: vionix-wheel-${{ secrets.RELEASE_TAG }}
 
+      - name: Install requirements
+        run: pip install -r requirements.txt --prefer-binary
 
-      - name: Format and save oauth.json
-        run: |
-            python -c "
-            import json
-            import os
-    
-            # Load the client secrets from the GitHub secret (stored in JSON_OAUTH_MAIN)
-            client_secrets = os.getenv('JSON_OAUTH_MAIN')
-            
-            # Debugging: Check if client_secrets is set
-            
-            
-            if not client_secrets:
-                exit('Error: JSON_OAUTH_MAIN is not set.')
-    
-            # Parse the secret into a JSON object
-            client_secrets_dict = json.loads(client_secrets)
-    
-            # Re-encode the JSON object with double quotes
-            with open('oauth.json', 'w') as f:
-                json.dump(client_secrets_dict, f, indent=2)
-    
-            print('oauth.json successfully written')"
-        env:
-          JSON_OAUTH_MAIN: ${{ secrets.JSON_OAUTH_YT }}  # Pass the secret here
+# -------------------------------------------------
+# 3️⃣ PREPARE
+# -------------------------------------------------
+  prepare:
+    name: 🧩 Prepare Assets & Secrets
+    runs-on: ubuntu-latest
+    needs: install
 
-      
-      - name: Copy bg.png and font.ttf to working directory
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Copy assets
         run: |
           cp assets/bg.png .
           cp assets/font_te.ttf .
           cp assets/output_image.png .
-      
-      - name: Generate random number between 1 and 23
-        id: random_number
-        run: |
-          RANDOM_NUM=$((1 + RANDOM % 23))
-          echo "Random number is $RANDOM_NUM"
-          echo "number=$RANDOM_NUM" >> $GITHUB_OUTPUT
 
-      - name: Copy the randomly picked MP3
-        run: |
-          FILE="assets/music/${{ steps.random_number.outputs.number }}.mp3"
-          echo "Copying $FILE to current directory as random.mp3"
-          cp "$FILE" ./${{ steps.random_number.outputs.number }}.mp3
+# -------------------------------------------------
+# 4️⃣ RUN
+# -------------------------------------------------
+  run:
+    name: 🚀 Run Vionix Pipeline
+    runs-on: ubuntu-latest
+    needs: prepare
 
-      - name: List files for verification
-        run: ls -l
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
 
-      - name: Run Process
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Restore pip cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Restore cached Vionix wheel
+        uses: actions/cache@v5
+        with:
+          path: ./*.whl
+          key: vionix-wheel-${{ secrets.RELEASE_TAG }}
+
+      - name: Install Vionix + deps
         run: |
-          echo "Running main.py with random number ${{ steps.random_number.outputs.number }}"
-          python main.py "${{ steps.random_number.outputs.number }}"
+          python -m pip install --upgrade pip
+          pip install ./*.whl || true
+          pip install -r requirements.txt --prefer-binary
+
+      # 🔑 REQUIRED AUTH FILES (FIX)
+      - name: Create client_secrets.json & oauth.json
+        run: |
+          python - <<'EOF'
+          import json, os
+
+          with open("client_secrets.json", "w") as f:
+              json.dump(json.loads(os.environ["JSON_CLIENT_YT"]), f, indent=2)
+
+          with open("oauth.json", "w") as f:
+              json.dump(json.loads(os.environ["JSON_OAUTH_YT"]), f, indent=2)
+
+          print("Auth files created successfully")
+          EOF
+
+      - name: Pick random music
+        id: music
+        run: |
+          NUM=$((1 + RANDOM % 23))
+          echo "num=$NUM" >> $GITHUB_OUTPUT
+          cp assets/music/$NUM.mp3 .
+
+      - name: Execute main
+        run: python main.py "${{ steps.music.outputs.num }}"

@@ -1,30 +1,77 @@
 {
-  	"quote_file": "quote.json",
-	"voice_description": "Anu speaks with a slightly higher pitch in a close-sounding environment. Her voice is clear, with subtle emotional depth and a normal pace, all captured in high-quality recording.",
-	"audio_file": "quote_audio_te.wav",
-	"video_file": "output_video_te.mp4",
-	"duration": 55,
-	"fps": 24,
-	"language": "Telugu",
-	"enabled": true,
-	"font":"font_te.ttf",
-	"background":"quote_bg.png",
-	"bgm_volume": 0.80,
-	"upload_cfg": {
-		"yt": {
-			"enabled": true,
-			"client_secrets_file": "client_secrets.json"
-		},
-		"aws": {
-			"s3": {
-				"enabled": true
-			}
-		},
-		"fb": {
-			"enabled": true
-		},
-		"ig": {
-			"enabled": true
-		}
-	}
+  "quote": {
+    "enabled": true,
+    "source": "file",
+    "file": "quote.json"
+  },
+
+  "tts": {
+    "enabled": true,
+    "engine": "indic",
+    "model": "ai4bharat/indic-parler-tts-pretrained",
+    "description": "Anu speaks with a slightly higher pitch in a close-sounding environment. Her voice is clear, with subtle emotional depth and a normal pace, all captured in high-quality recording.",
+    "output": "quote_audio_te.wav"
+  },
+
+  "layout": {
+    "enabled": true,
+    "font": "font_te.ttf",
+    "video_size": [1080, 1920],
+    "padding": 80,
+    "line_spacing": 1.15
+  },
+
+  "background": {
+    "enabled": true,
+    "image": "quote_bg.png",
+    "enhance": true
+  },
+
+  "karaoke": {
+    "enabled": true,
+    "mode": "word",
+    "force": true,
+    "debug": true,
+    "base_color": [255, 255, 255],
+    "highlight_color": [255, 220, 60]
+  },
+
+  "audio": {
+    "bgm": {
+      "enabled": true,
+      "volume": 0.8,
+      "random": true
+    }
+  },
+
+  "video": {
+    "fps": 24,
+    "duration": 55,
+    "output": "output_video_te.mp4",
+    "intro": {
+      "enabled": false,
+      "path": "intro.mp4",
+      "duration": 3
+    },
+    "outro": {
+      "enabled": false,
+      "path": "intro.mp4",
+      "duration": 2
+    }
+  },
+
+  "upload": {
+    "enabled": true,
+    "youtube": { "enabled": true },
+    "facebook": { "enabled": true },
+    "instagram": { "enabled": true },
+    "s3": { "enabled": true }
+  },
+
+  "meta": {
+    "language": "Telugu",
+    "wx_language": "te",
+    "force_cpu": true,
+    "test_mode": false
+  }
 }
