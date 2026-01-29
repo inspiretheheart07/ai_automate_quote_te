@@ -13,3 +13,4 @@ huggingface_hub
 google-api-python-client
 uharfbuzz
 google-genai
+pytz
